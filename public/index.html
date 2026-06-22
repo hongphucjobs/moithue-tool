@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mời Thuê Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Mời Thuê Tool</h1>
+        </header>
+
+        <div id="login-section" class="section card">
+            <h2>Đăng nhập</h2>
+            <div class="login-form">
+                <input type="email" id="login-email" placeholder="Email" value="Phonghuyentran.moithue@gmail.com">
+                <input type="password" id="login-password" placeholder="Mật khẩu" value="Huyentran">
+                <button id="login-btn" class="btn btn-primary">Đăng nhập</button>
+                <p id="login-status" class="status"></p>
+            </div>
+        </div>
+
+        <div id="main-section" class="section card" style="display:none">
+            <div class="user-info">
+                <span class="user-status">&#10003; Đã đăng nhập</span>
+                <button id="logout-btn" class="btn btn-small">Thoát</button>
+            </div>
+
+            <div class="input-group">
+                <label for="room-url">Link phòng:</label>
+                <div class="url-row">
+                    <input type="url" id="room-url" placeholder="https://moithue.com/listing/...">
+                    <button id="fetch-btn" class="btn btn-primary">Lấy thông tin</button>
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display:none">Đang tải...</div>
+            <p id="fetch-status" class="status"></p>
+
+            <div id="room-info" class="room-info" style="display:none">
+                <div class="room-link-row">
+                    <span id="room-link-display" class="room-link-display"></span>
+                    <button id="copy-link-btn" class="btn btn-icon" title="Sao chép link">&#x2398;</button>
+                </div>
+                <div class="room-name-row">
+                    <h3 id="room-name" class="room-name"></h3>
+                    <button id="copy-name-btn" class="btn btn-icon" title="Sao chép tên phòng">&#x2398;</button>
+                </div>
+                <div class="room-short-row">
+                    <span id="room-short-name" class="room-short"></span>
+                    <button id="copy-short-btn" class="btn btn-icon" title="Sao chép tên ngắn">&#x2398;</button>
+                </div>
+                <div class="room-price" id="room-price"></div>
+
+                <div class="services-box" id="services-box" style="display:none">
+                    <div class="services-header">
+                        <span class="services-label">Dịch vụ & chi phí</span>
+                        <button id="copy-services-btn" class="btn btn-icon" title="Sao chép dịch vụ">&#x2398;</button>
+                    </div>
+                    <pre id="services-text" class="services-text"></pre>
+                </div>
+
+                <div class="actions">
+                    <button id="download-btn" class="btn btn-success">Tải ảnh phòng</button>
+                    <button id="copy-post-btn" class="btn btn-secondary">Sao chép bài viết</button>
+                </div>
+
+                <div id="download-progress" class="progress-area" style="display:none">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text" class="progress-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
