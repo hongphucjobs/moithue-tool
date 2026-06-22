@@ -23,8 +23,6 @@ app.use(session({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
-
 function extractCookies(resp) {
     if (!resp.headers['set-cookie']) return [];
     return resp.headers['set-cookie'].map(c => c.split(';')[0]);
@@ -37,24 +35,27 @@ function mergeCookies(existing, newCookies) {
     return Object.values(map);
 }
 
-function getHeaders(req) {
-    const h = {
-        'User-Agent': UA,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
-    };
-    if (req.session.cookies && req.session.cookies.length > 0) {
-        h['Cookie'] = req.session.cookies.join('; ');
-    }
-    return h;
-}
-
 app.post('/api/login', async (req, res) => {
     try {
         const cookieJar = {};
+        const browserHeaders = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Sec-Ch-Ua': '"Not-A.Brand";v="99", "Chromium";v="134"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+        };
 
         const loginPageResp = await axios.get('https://moithue.com/login-and-register/?tab=login', {
-            headers: { 'User-Agent': UA },
+            headers: { ...browserHeaders },
+            timeout: 30000,
             maxRedirects: 0,
             validateStatus: s => s < 400 || s === 302
         });
@@ -81,12 +82,13 @@ app.post('/api/login', async (req, res) => {
             params.toString(),
             {
                 headers: {
+                    ...browserHeaders,
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Cookie': cookieStr,
-                    'User-Agent': UA,
                     'Referer': 'https://moithue.com/login-and-register/?tab=login',
                     'Origin': 'https://moithue.com',
                 },
+                timeout: 30000,
                 maxRedirects: 0,
                 validateStatus: s => s < 400 || s === 302
             }
@@ -108,9 +110,10 @@ app.post('/api/login', async (req, res) => {
                 try {
                     const followResp = await axios.get(redirectUrl, {
                         headers: {
+                            ...browserHeaders,
                             'Cookie': Object.values(cookieJar).join('; '),
-                            'User-Agent': UA,
                         },
+                        timeout: 20000,
                         maxRedirects: 3,
                     });
                     extractCookies(followResp).forEach(c => { const [k] = c.split('='); cookieJar[k] = c; });
@@ -158,8 +161,11 @@ app.get('/api/check-login', async (req, res) => {
         const resp = await axios.get('https://moithue.com/', {
             headers: {
                 'Cookie': req.session.cookies.join('; '),
-                'User-Agent': UA,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
             },
+            timeout: 20000,
             maxRedirects: 0,
             validateStatus: s => s < 400 || s === 302
         });
@@ -186,7 +192,14 @@ app.post('/api/fetch-listing', async (req, res) => {
         if (!url) return res.json({ success: false, message: 'Thiếu link phòng' });
 
         const resp = await axios.get(url, {
-            headers: getHeaders(req),
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Cookie': (req.session.cookies || []).join('; '),
+            },
+            timeout: 30000,
             maxRedirects: 0,
             validateStatus: s => s < 400 || s === 302
         });
@@ -259,9 +272,12 @@ app.get('/api/proxy-image', async (req, res) => {
 
         const resp = await axios.get(imgUrl, {
             headers: {
-                'User-Agent': UA,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
                 'Referer': 'https://moithue.com/',
+                'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
             },
+            timeout: 30000,
             responseType: 'stream',
         });
 
