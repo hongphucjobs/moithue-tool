@@ -41,8 +41,6 @@ const els = {
     roomInfo: document.getElementById('room-info'),
     roomName: document.getElementById('room-name'),
     roomLinkDisplay: document.getElementById('room-link-display'),
-    sheetUrl: document.getElementById('sheet-url'),
-    pushSheetBtn: document.getElementById('push-sheet-btn'),
     roomShortName: document.getElementById('room-short-name'),
     roomPrice: document.getElementById('room-price'),
     copyLinkBtn: document.getElementById('copy-link-btn'),
@@ -120,6 +118,7 @@ async function fetchListing() {
         }
         els.roomInfo.style.display = 'block';
         setStatus(els.fetchStatus, 'Đã tải thông tin phòng: ' + result.imageCount + ' ảnh', 'success');
+        pushToSheet();
     } else {
         if (result.needLogin) {
             els.loadingSection.style.display = 'flex';
@@ -255,19 +254,9 @@ function copyServices() {
 }
 
 async function pushToSheet() {
-    const sheetWebhook = els.sheetUrl.value.trim();
-    if (!sheetWebhook) {
-        setStatus(els.fetchStatus, 'Chưa nhập URL Google Sheet', 'error');
-        return;
-    }
-    if (!currentData) {
-        setStatus(els.fetchStatus, 'Chưa có dữ liệu phòng', 'error');
-        return;
-    }
-    els.pushSheetBtn.disabled = true;
-    els.pushSheetBtn.textContent = 'Đang đẩy...';
+    if (!currentData || !SHEET_WEBHOOK_URL) return;
     try {
-        await fetch(sheetWebhook, {
+        await fetch(SHEET_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
@@ -276,19 +265,10 @@ async function pushToSheet() {
                 link: currentData.url
             })
         });
-        setStatus(els.fetchStatus, 'Đã đẩy lên Google Sheet!', 'success');
     } catch (e) {
-        setStatus(els.fetchStatus, 'Lỗi đẩy lên sheet: ' + e.message, 'error');
+        console.error('Sheet push error:', e);
     }
-    els.pushSheetBtn.disabled = false;
-    els.pushSheetBtn.textContent = 'Đẩy lên Sheet';
 }
-
-function restoreSheetUrl() {
-    const saved = localStorage.getItem('sheetUrl');
-    if (saved) els.sheetUrl.value = saved;
-}
-els.sheetUrl.addEventListener('change', () => localStorage.setItem('sheetUrl', els.sheetUrl.value));
 
 els.fetchBtn.addEventListener('click', fetchListing);
 els.roomUrl.addEventListener('keydown', e => { if (e.key === 'Enter') fetchListing(); });
@@ -298,7 +278,5 @@ els.copyShortBtn.addEventListener('click', copyShortName);
 els.downloadBtn.addEventListener('click', downloadImages);
 els.copyPostBtn.addEventListener('click', copyPost);
 els.copyServicesBtn.addEventListener('click', copyServices);
-els.pushSheetBtn.addEventListener('click', pushToSheet);
 
-restoreSheetUrl();
 autoLogin();
