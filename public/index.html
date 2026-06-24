@@ -12,22 +12,12 @@
             <h1>Mời Thuê Tool</h1>
         </header>
 
-        <div id="login-section" class="section card">
-            <h2>Đăng nhập</h2>
-            <div class="login-form">
-                <input type="email" id="login-email" placeholder="Email" value="Phonghuyentran.moithue@gmail.com">
-                <input type="password" id="login-password" placeholder="Mật khẩu" value="Huyentran">
-                <button id="login-btn" class="btn btn-primary">Đăng nhập</button>
-                <p id="login-status" class="status"></p>
-            </div>
+        <div id="loading-section" class="section card" style="display:flex;align-items:center;justify-content:center;padding:40px;flex-direction:column;gap:16px">
+            <div class="spinner"></div>
+            <span id="loading-status">Đang đăng nhập...</span>
         </div>
 
         <div id="main-section" class="section card" style="display:none">
-            <div class="user-info">
-                <span class="user-status">&#10003; Đã đăng nhập</span>
-                <button id="logout-btn" class="btn btn-small">Thoát</button>
-            </div>
-
             <div class="input-group">
                 <label for="room-url">Link phòng:</label>
                 <div class="url-row">
@@ -65,6 +55,11 @@
                 <div class="actions">
                     <button id="download-btn" class="btn btn-success">Tải ảnh phòng</button>
                     <button id="copy-post-btn" class="btn btn-secondary">Sao chép bài viết</button>
+                </div>
+
+                <div class="sheet-row">
+                    <input type="url" id="sheet-url" placeholder="https://script.google.com/macros/s/..." value="">
+                    <button id="push-sheet-btn" class="btn btn-primary">Đẩy lên Sheet</button>
                 </div>
 
                 <div id="download-progress" class="progress-area" style="display:none">

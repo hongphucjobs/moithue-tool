@@ -1,3 +1,6 @@
+const EMAIL = 'Phonghuyentran.moithue@gmail.com';
+const PASSWORD = 'Huyentran';
+
 const API = {
     async login(email, password) {
         const r = await fetch('/api/login', {
@@ -28,13 +31,9 @@ const API = {
 };
 
 const els = {
-    loginSection: document.getElementById('login-section'),
+    loadingSection: document.getElementById('loading-section'),
+    loadingStatus: document.getElementById('loading-status'),
     mainSection: document.getElementById('main-section'),
-    loginEmail: document.getElementById('login-email'),
-    loginPassword: document.getElementById('login-password'),
-    loginBtn: document.getElementById('login-btn'),
-    loginStatus: document.getElementById('login-status'),
-    logoutBtn: document.getElementById('logout-btn'),
     roomUrl: document.getElementById('room-url'),
     fetchBtn: document.getElementById('fetch-btn'),
     loading: document.getElementById('loading'),
@@ -42,6 +41,8 @@ const els = {
     roomInfo: document.getElementById('room-info'),
     roomName: document.getElementById('room-name'),
     roomLinkDisplay: document.getElementById('room-link-display'),
+    sheetUrl: document.getElementById('sheet-url'),
+    pushSheetBtn: document.getElementById('push-sheet-btn'),
     roomShortName: document.getElementById('room-short-name'),
     roomPrice: document.getElementById('room-price'),
     copyLinkBtn: document.getElementById('copy-link-btn'),
@@ -65,53 +66,25 @@ function setStatus(el, msg, type) {
     el.className = 'status' + (type ? ' ' + type : '');
 }
 
-function showSection(section) {
-    els.loginSection.style.display = section === 'login' ? 'block' : 'none';
-    els.mainSection.style.display = section === 'main' ? 'block' : 'none';
-}
-
-async function doLogin() {
-    const email = els.loginEmail.value.trim();
-    const password = els.loginPassword.value;
-    if (!email || !password) {
-        setStatus(els.loginStatus, 'Vui lòng nhập email và mật khẩu', 'error');
-        return;
+async function autoLogin() {
+    els.loadingStatus.textContent = 'Đang đăng nhập...';
+    let ok = false;
+    try {
+        const check = await API.checkLogin();
+        ok = check.loggedIn;
+    } catch {}
+    if (!ok) {
+        try {
+            const r = await API.login(EMAIL, PASSWORD);
+            ok = r.success;
+        } catch {}
     }
-    els.loginBtn.disabled = true;
-    els.loginBtn.textContent = 'Đang đăng nhập...';
-    setStatus(els.loginStatus, '', '');
-
-    const result = await API.login(email, password);
-    if (result.success) {
-        setStatus(els.loginStatus, 'Đăng nhập thành công!', 'success');
-        showSection('main');
-    } else {
-        setStatus(els.loginStatus, result.message || 'Đăng nhập thất bại', 'error');
-    }
-    els.loginBtn.disabled = false;
-    els.loginBtn.textContent = 'Đăng nhập';
-}
-
-async function tryAutoLogin() {
-    const email = els.loginEmail.value.trim();
-    const password = els.loginPassword.value;
-    if (!email || !password) return false;
-    const r = await API.login(email, password);
-    return r.success;
-}
-
-async function ensureLoggedIn() {
-    const result = await API.checkLogin();
-    if (result.loggedIn) return true;
-    return await tryAutoLogin();
-}
-
-async function checkLoginStatus() {
-    const ok = await ensureLoggedIn();
     if (ok) {
-        showSection('main');
+        els.loadingSection.style.display = 'none';
+        els.mainSection.style.display = 'block';
     } else {
-        showSection('login');
+        els.loadingStatus.textContent = 'Đăng nhập thất bại, thử lại...';
+        setTimeout(autoLogin, 3000);
     }
 }
 
@@ -149,14 +122,9 @@ async function fetchListing() {
         setStatus(els.fetchStatus, 'Đã tải thông tin phòng: ' + result.imageCount + ' ảnh', 'success');
     } else {
         if (result.needLogin) {
-            const ok = await ensureLoggedIn();
-            if (ok) {
-                showSection('main');
-                fetchListing();
-                return;
-            }
-            setStatus(els.fetchStatus, result.message, 'error');
-            showSection('login');
+            els.loadingSection.style.display = 'flex';
+            els.mainSection.style.display = 'none';
+            autoLogin();
         } else {
             setStatus(els.fetchStatus, result.message, 'error');
         }
@@ -286,14 +254,42 @@ function copyServices() {
     setStatus(els.fetchStatus, 'Đã sao chép dịch vụ!', 'success');
 }
 
-function logout() {
-    currentData = null;
-    showSection('login');
+async function pushToSheet() {
+    const sheetWebhook = els.sheetUrl.value.trim();
+    if (!sheetWebhook) {
+        setStatus(els.fetchStatus, 'Chưa nhập URL Google Sheet', 'error');
+        return;
+    }
+    if (!currentData) {
+        setStatus(els.fetchStatus, 'Chưa có dữ liệu phòng', 'error');
+        return;
+    }
+    els.pushSheetBtn.disabled = true;
+    els.pushSheetBtn.textContent = 'Đang đẩy...';
+    try {
+        await fetch(sheetWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                shortName: currentData.shortName,
+                price: currentData.price,
+                link: currentData.url
+            })
+        });
+        setStatus(els.fetchStatus, 'Đã đẩy lên Google Sheet!', 'success');
+    } catch (e) {
+        setStatus(els.fetchStatus, 'Lỗi đẩy lên sheet: ' + e.message, 'error');
+    }
+    els.pushSheetBtn.disabled = false;
+    els.pushSheetBtn.textContent = 'Đẩy lên Sheet';
 }
 
-els.loginBtn.addEventListener('click', doLogin);
-els.loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-els.logoutBtn.addEventListener('click', logout);
+function restoreSheetUrl() {
+    const saved = localStorage.getItem('sheetUrl');
+    if (saved) els.sheetUrl.value = saved;
+}
+els.sheetUrl.addEventListener('change', () => localStorage.setItem('sheetUrl', els.sheetUrl.value));
+
 els.fetchBtn.addEventListener('click', fetchListing);
 els.roomUrl.addEventListener('keydown', e => { if (e.key === 'Enter') fetchListing(); });
 els.copyLinkBtn.addEventListener('click', copyLink);
@@ -302,5 +298,7 @@ els.copyShortBtn.addEventListener('click', copyShortName);
 els.downloadBtn.addEventListener('click', downloadImages);
 els.copyPostBtn.addEventListener('click', copyPost);
 els.copyServicesBtn.addEventListener('click', copyServices);
+els.pushSheetBtn.addEventListener('click', pushToSheet);
 
-checkLoginStatus();
+restoreSheetUrl();
+autoLogin();

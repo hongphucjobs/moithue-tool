@@ -16,17 +16,16 @@ header h1 { font-size: 24px; color: #374B5C; }
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 .section h2 { font-size: 18px; margin-bottom: 16px; color: #374B5C; }
-.login-form input {
-    width: 100%;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 15px;
-    outline: none;
-    transition: border-color 0.2s;
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #F2B705;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
-.login-form input:focus { border-color: #F2B705; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-section .status { color: #73818C; font-size: 14px; }
 .btn {
     display: inline-flex;
     align-items: center;
@@ -58,15 +57,6 @@ header h1 { font-size: 24px; color: #374B5C; }
 .status { margin-top: 8px; font-size: 14px; color: #666; }
 .status.error { color: #e74c3c; }
 .status.success { color: #27ae60; }
-.user-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #eee;
-}
-.user-status { color: #27ae60; font-weight: 600; font-size: 14px; }
 .input-group label {
     display: block;
     font-weight: 600;
@@ -118,6 +108,21 @@ header h1 { font-size: 24px; color: #374B5C; }
     margin-top: 16px;
 }
 .actions .btn { flex: 1; min-width: 120px; }
+.sheet-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+.sheet-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+}
+.sheet-row input:focus { border-color: #F2B705; }
+.sheet-row .btn { white-space: nowrap; }
 .services-box {
     margin-top: 16px;
     padding: 12px;
